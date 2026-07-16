@@ -74,7 +74,6 @@ npm run build
 
 | Документ | Для чого |
 | --- | --- |
-| [план.md](%D0%BF%D0%BB%D0%B0%D0%BD.md) | Загальний план практики |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Основна інструкція для практикантів: onboarding, Git, issues, branches, commits і Pull Requests |
 | [docs/deployment.md](docs/deployment.md) | Як працює automatic deployment |
 | [docs/architecture.md](docs/architecture.md) | Стартова архітектура проєкту |
