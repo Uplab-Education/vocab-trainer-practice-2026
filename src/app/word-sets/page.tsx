@@ -30,7 +30,12 @@ export default function WordSetsPage() {
 
       {/*Block with search field*/}
       <div className="mb-8 mt-6 max-w-sm">
+        {/*Label for accessibility*/}
+        <label htmlFor="word-set-search" className="sr-only">
+          Search word sets
+        </label>
         <input
+          id="word-set-search"
           type="text"
           placeholder="Search by title or category..."
           value={searchQuery}
