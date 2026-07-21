@@ -1,6 +1,7 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { getCurrentUser } from "@/auth/session";
+import { AdminWordSetsTable } from "@/components/AdminWordSetsTable";
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
@@ -8,9 +9,9 @@ export default async function AdminPage() {
   if (user?.role !== "admin") {
     return (
       <>
-      <PageHeader
-        eyebrow="Admin"
-        title="Admin access required"
+        <PageHeader
+          eyebrow="Admin"
+          title="Admin access required"
           description="Log in with an administrator account to manage vocabulary content."
         />
         <EmptyState
@@ -28,10 +29,9 @@ export default async function AdminPage() {
         title="Content management"
         description="Manage vocabulary sets, words, and imports from one workspace."
       />
-      <EmptyState
-        title="Content management is coming next"
-        description="This area will include word set tables, edit forms, and CSV import tools."
-      />
+      
+      {/*EmptyState -> Admin Table*/}
+      <AdminWordSetsTable />
     </>
   );
 }
