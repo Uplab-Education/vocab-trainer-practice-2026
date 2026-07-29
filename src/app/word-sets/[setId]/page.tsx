@@ -19,7 +19,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
   /*Handling unknown setId (Not Found State)*/
   if (!wordSet) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-16">
+      <div className="mx-auto w-full max-w-5xl px-4 py-16">
         <EmptyState
           title="Set not found"
           description="The vocabulary set you are looking for does not exist."
@@ -38,7 +38,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
   const difficulties = Array.from(new Set(wordSet.words.map((w) => w.difficulty))).join(', ');
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8">
       <Link href="/word-sets" className="mb-6 inline-block text-sm font-medium text-blue-600 hover:underline">
         &larr; Back to vocabulary
       </Link>
@@ -50,11 +50,11 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
       />
 
       <div className="mb-8 mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
+        <div className="flex w-full flex-wrap gap-2 text-sm sm:w-auto">
+          <span className="inline-block max-w-full break-words rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
             {categories}
           </span>
-          <span className="rounded-full bg-orange-50 px-3 py-1 font-medium text-orange-700">
+          <span className="inline-block whitespace-nowrap rounded-full bg-orange-50 px-3 py-1 font-medium text-orange-700">
             {difficulties}
           </span>
         </div>
@@ -69,7 +69,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
       </div>
 
       {/*Word Table*/}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="w-full overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
