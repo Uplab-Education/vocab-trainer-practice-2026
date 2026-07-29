@@ -15,7 +15,7 @@ type WordSetFormProps = {
 };
 
 export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProps) {
-  // Ініціалізуємо стан значеннями з initialData (якщо це режим редагування) або порожніми рядками
+  /*Initialize form state with either initial data (for edit mode) or empty fields (for create mode)*/
   const [formData, setFormData] = useState<WordSetFormData>({
     title: initialData?.title || "",
     description: initialData?.description || "",
@@ -26,7 +26,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
   const [errors, setErrors] = useState<Partial<Record<keyof WordSetFormData, string>>>({});
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Клієнтська валідація
+  /*Client-side validation function to check for empty fields and set error messages*/
   const validate = () => {
     const newErrors: Partial<Record<keyof WordSetFormData, string>> = {};
     if (!formData.title.trim()) newErrors.title = "Title is required";
@@ -35,7 +35,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
     if (!formData.difficulty) newErrors.difficulty = "Difficulty is required";
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0; // Повертає true, якщо помилок немає
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,11 +43,11 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
     setIsSuccess(false);
 
     if (validate()) {
-      // Імітація локального збереження (без бази даних)
+      /*Local submit logic*/
       console.log("Local submit success:", formData);
       setIsSuccess(true);
       
-      // Очищаємо форму тільки якщо це створення нового набору
+      /*Reset form only if it's not in edit mode*/
       if (!isEditMode) {
         setFormData({ title: "", description: "", category: "", difficulty: "" });
       }
@@ -56,7 +56,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
 
   return (
     <div className="mx-auto w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      {/* Local Success State */}
+      {/*Local Success State*/}
       {isSuccess && (
         <div className="mb-6 rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-700">
           Successfully {isEditMode ? "updated" : "created"} the word set! (Local mode)
@@ -64,7 +64,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title Field */}
+        {/*Title Field*/}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-slate-900">Title</label>
           <input
@@ -78,7 +78,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
           {errors.title && <p className="mt-1 text-xs text-red-500">{errors.title}</p>}
         </div>
 
-        {/* Description Field */}
+        {/*Description Field*/}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-slate-900">Description</label>
           <textarea
@@ -92,7 +92,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
           {errors.description && <p className="mt-1 text-xs text-red-500">{errors.description}</p>}
         </div>
 
-        {/* Category Field */}
+        {/*Category Field*/}
         <div>
           <label htmlFor="category" className="block text-sm font-medium text-slate-900">Category</label>
           <input
@@ -106,7 +106,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
           {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category}</p>}
         </div>
 
-        {/* Difficulty Field */}
+        {/*Difficulty Field*/}
         <div>
           <label htmlFor="difficulty" className="block text-sm font-medium text-slate-900">Difficulty</label>
           <select
@@ -123,7 +123,7 @@ export function WordSetForm({ initialData, isEditMode = false }: WordSetFormProp
           {errors.difficulty && <p className="mt-1 text-xs text-red-500">{errors.difficulty}</p>}
         </div>
 
-        {/* Actions */}
+        {/*Actions*/}
         <div className="flex justify-end pt-4">
           <button
             type="submit"
