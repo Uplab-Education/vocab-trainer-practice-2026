@@ -70,6 +70,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
 
       {/*Word Table*/}
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-slate-50">
             <tr>
@@ -90,5 +91,6 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
         </table>
       </div>
     </div>
+  </div>
   );
 }
