@@ -1,14 +1,44 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { WordSetForm } from "@/components/WordSetForm";
+import { EmptyState } from "@/components/ui/empty-state";
+import { starterWordSets } from "@/features/word-sets/data";
 import Link from "next/link";
 
-export default function EditWordSetPage() {
-  /*Local initial data(for demonstration purposes)*/
-  const mockInitialData = {
-    title: "Basic Greetings",
-    description: "Essential words for daily communication.",
-    category: "Greetings",
-    difficulty: "easy" as const,
+type PageProps = {
+  params: Promise<{
+    setId: string;
+  }>;
+};
+
+export default async function EditWordSetPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  /*Find the corresponding word set*/
+  const wordSet = starterWordSets.find((set) => set.id === resolvedParams.setId);
+
+  /*Handle unknown setId(Not Found State)*/
+  if (!wordSet) {
+    return (
+      <div className="mx-auto w-full max-w-5xl px-4 py-16">
+        <EmptyState
+          title="Set not found"
+          description="The vocabulary set you want to edit does not exist."
+        />
+        <div className="mt-6 flex justify-center">
+          <Link href="/admin" className="text-sm font-medium text-blue-600 hover:underline">
+            &larr; Back to Admin Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  /*Extract category and difficulty from the first word to populate the form*/
+  const firstWord = wordSet.words[0];
+  const initialData = {
+    title: wordSet.title,
+    description: wordSet.description,
+    category: firstWord ? firstWord.category : "",
+    difficulty: (firstWord ? firstWord.difficulty : "") as "easy" | "medium" | "hard" | "",
   };
 
   return (
@@ -24,7 +54,7 @@ export default function EditWordSetPage() {
       />
       
       <div className="mt-8">
-        <WordSetForm initialData={mockInitialData} isEditMode={true} />
+        <WordSetForm initialData={initialData} isEditMode={true} />
       </div>
     </div>
   );
