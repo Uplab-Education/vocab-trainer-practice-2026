@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
+import Papa from "papaparse"; // Imported Papa Parse
 
 type ParsedRow = {
   englishWord: string;
@@ -25,7 +26,9 @@ export default function ImportPreviewPage() {
     /*Read the file as text and parse it into structured data*/
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
+      let text = event.target?.result as string;
+      /*Clean up the CSV text by removing spaces after commas before quotes to ensure proper parsing*/
+      text = text.replace(/,\s+"/g, ',"');
       parseCSV(text);
     };
     reader.onerror = () => {
@@ -35,16 +38,20 @@ export default function ImportPreviewPage() {
   };
 
   const parseCSV = (text: string) => {
-    /*Split the text into lines and filter out empty ones*/
-    const lines = text.split('\n').map((line) => line.trim()).filter((line) => line);
+    /*Parse the CSV text using Papa Parse to correctly handle quotes and commas*/
+    const parsed = Papa.parse<string[]>(text, {
+      skipEmptyLines: true,
+    });
+
+    const rowsData = parsed.data;
     
-    if (lines.length < 2) {
+    if (rowsData.length < 2) {
       setError("The CSV file is empty or missing data rows.");
       return;
     }
 
     /*Get headers and find indices for required columns(ignoring the register)*/
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const headers = rowsData[0].map((h) => h.trim().toLowerCase());
     const englishIdx = headers.findIndex((h) => h.includes('english'));
     const ukrainianIdx = headers.findIndex((h) => h.includes('ukrainian'));
 
@@ -55,14 +62,13 @@ export default function ImportPreviewPage() {
 
     /*Parse valid rows into structured data*/
     const parsedData: ParsedRow[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      /*Simple CSV parsing (doesn't handle quoted commas)*/
-      const columns = lines[i].split(',').map((col) => col.trim());
+    for (let i = 1; i < rowsData.length; i++) {
+      const columns = rowsData[i];
       
       if (columns.length > Math.max(englishIdx, ukrainianIdx)) {
         parsedData.push({
-          englishWord: columns[englishIdx],
-          ukrainianTranslation: columns[ukrainianIdx],
+          englishWord: columns[englishIdx]?.trim() || "",
+          ukrainianTranslation: columns[ukrainianIdx]?.trim() || "",
         });
       }
     }
