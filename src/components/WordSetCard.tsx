@@ -16,7 +16,7 @@ export function WordSetCard({ wordSet }: WordSetCardProps) {
     <Link href={`/word-sets/${wordSet.id}`} className="block h-full">
       <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
         <h3 className="text-lg font-semibold text-slate-950">{wordSet.title}</h3>
-        <p className="mt-2 flex-grow text-sm text-slate-600">{wordSet.description}</p>
+        <p className="mt-2 grow text-sm text-slate-600">{wordSet.description}</p>
         
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
           <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">

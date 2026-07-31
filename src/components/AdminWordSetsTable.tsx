@@ -1,6 +1,7 @@
 "use client";
 
 import { starterWordSets } from "@/features/word-sets/data";
+import Link from "next/link";
 
 export function AdminWordSetsTable() {
   return (
@@ -8,12 +9,12 @@ export function AdminWordSetsTable() {
       {/*Global Actions:*/}
       {/*Create & Import*/}
       <div className="mb-6 flex flex-wrap gap-4">
-        <button
-          onClick={() => alert("Create action triggered (local mode)")}
+        <Link
+          href="/admin/create"
           className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
         >
           + Create New Set
-        </button>
+        </Link>
         <button
           onClick={() => alert("Import CSV action triggered (local mode)")}
           className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50"
@@ -55,12 +56,12 @@ export function AdminWordSetsTable() {
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{wordCount}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{mockUpdatedDate}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <button
-                        onClick={() => alert(`Edit ${set.id} triggered (local mode)`)}
+                      <Link
+                        href={`/admin/${set.id}/edit`}
                         className="text-blue-600 hover:text-blue-900 mr-4"
                       >
                         Edit
-                      </button>
+                      </Link>
                       <button
                         onClick={() => alert(`Delete ${set.id} triggered (local mode)`)}
                         className="text-red-600 hover:text-red-900"
