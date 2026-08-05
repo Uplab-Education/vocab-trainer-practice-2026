@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { type Word, type WordSet } from "@/features/word-sets/data";
 
-type Word = {
-  id: string;
-  englishWord: string;
-  ukrainianTranslation: string;
-};
-
-type WordSet = {
-  id: string;
-  title: string;
-  words: Word[];
-};
+// Fisher-Yates shuffle implementation for unbiased randomness
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
 
 // Helper function to generate options (moved outside so it doesn't get recreated on every render)
 const generateOptions = (currentWord: Word, allWords: Word[]) => {
@@ -21,38 +20,28 @@ const generateOptions = (currentWord: Word, allWords: Word[]) => {
   // Take all words except the current one
   const otherWords = allWords.filter((w) => w.id !== currentWord.id);
   // Shuffle the other words to get random incorrect options
-  const shuffledOthers = [...otherWords].sort(() => 0.5 - Math.random());
+  const shuffledOthers = shuffleArray(otherWords);
   // Take the first 3 as incorrect options
   const incorrectOptions = shuffledOthers.slice(0, 3).map((w) => w.ukrainianTranslation);
   
   // Add the correct translation and shuffle again
   const allOptions = [...incorrectOptions, currentWord.ukrainianTranslation];
-  return allOptions.sort(() => 0.5 - Math.random());
+  return shuffleArray(allOptions);
 };
 
-export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
-  const [isMounted, setIsMounted] = useState(false); // Added for hydration safety
+export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   
   // Generate initial options lazily inside useState
-  const [options, setOptions] = useState<string[]>(() => {
-    if (wordSet.words.length > 0) {
-      return generateOptions(wordSet.words[0], wordSet.words);
-    }
-    return [];
-  });
+  const [options, setOptions] = useState<string[]>(initialOptions);
 
   /* Only run ONCE when the component mounts on the client to prevent SSR hydration mismatches */
-  useEffect(() => {
-    // Wrap setIsMounted in a setTimeout to make the state update asynchronous
-    /* This resolves the strict linter error about "synchronous setState inside an effect"
-    while keeping the SSR hydration safety completely intact. */
-    const timer = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  // Wrap setIsMounted in a setTimeout to make the state update asynchronous
+  /* This resolves the strict linter error about "synchronous setState inside an effect"
+  while keeping the SSR hydration safety completely intact. */
 
   const currentWord = wordSet.words[currentIndex];
 
@@ -79,9 +68,6 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
   };
 
   // Wait until client has mounted to render (To completely avoids the hydration)
-  if (!isMounted) {
-    return null; 
-  }
 
   // Training completion screen
   if (isFinished) {
@@ -93,7 +79,7 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
         </p>
         <Link
           href={`/word-sets/${wordSet.id}`}
-          className="inline-flex justify-center rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
+          className="inline-flex justify-center rounded-md bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
         >
           Back to Word Set
         </Link>
@@ -106,13 +92,27 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
 
   return (
     <div className="mx-auto max-w-2xl py-8 px-4 w-full">
+      {/* Hidden aria-live region to announce correct/incorrect to screen readers */}
+      <div aria-live="polite" className="sr-only">
+        {selectedAnswer 
+          ? (selectedAnswer === currentWord.ukrainianTranslation ? "Correct answer selected." : "Incorrect answer selected.") 
+          : "Choose the correct translation."}
+      </div>
+
       {/* Progress bar */}
       <div className="mb-8">
         <div className="flex justify-between text-sm font-medium text-slate-500 mb-2">
           <span>{wordSet.title}</span>
           <span>{currentIndex + 1} / {wordSet.words.length}</span>
         </div>
-        <div className="w-full bg-slate-200 rounded-full h-2">
+        <div 
+          className="w-full bg-slate-200 rounded-full h-2"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Training progress"
+        >
           <div
             className="bg-blue-600 h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -123,7 +123,7 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
       {/* Key word */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center mb-8">
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Select the correct translation</h3>
-        <p className="text-4xl sm:text-5xl font-bold text-slate-900">{currentWord.englishWord}</p>
+        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900">{currentWord.englishWord}</h1>
       </div>
 
       {/* Answer options */}
@@ -133,12 +133,23 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
           const isCorrect = option === currentWord.ukrainianTranslation;
           
           let buttonStyle = "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300";
+          let icon = null;
           
           if (selectedAnswer) {
             if (isCorrect) {
               buttonStyle = "border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500";
+              icon = (
+                <svg className="ml-2 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              );
             } else if (isSelected) {
               buttonStyle = "border-red-500 bg-red-50 text-red-700 ring-1 ring-red-500";
+              icon = (
+                <svg className="ml-2 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              );
             } else {
               buttonStyle = "border-slate-200 bg-slate-50 text-slate-400 opacity-50 cursor-not-allowed";
             }
@@ -149,9 +160,11 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
               key={idx}
               onClick={() => handleAnswer(option)}
               disabled={selectedAnswer !== null}
-              className={`px-6 py-4 rounded-lg border-2 text-lg font-medium transition-all duration-200 ${buttonStyle}`}
+              aria-pressed={isSelected}
+              className={`flex items-center justify-center px-6 py-4 rounded-lg border-2 text-lg font-medium transition-all duration-200 ${buttonStyle}`}
             >
-              {option}
+              <span>{option}</span>
+              {icon}
             </button>
           );
         })}
@@ -160,10 +173,10 @@ export function TrainingClient({ wordSet }: { wordSet: WordSet }) {
       {/* "Next" button (appears only after selection) */}
       <div className="h-12">
         {selectedAnswer && (
-          <div className="flex justify-end animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex justify-end">
             <button
               onClick={handleNext}
-              className="rounded-md bg-blue-600 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500"
+              className="rounded-md bg-slate-950 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
             >
               {currentIndex < wordSet.words.length - 1 ? "Next Word" : "Finish Training"}
             </button>
