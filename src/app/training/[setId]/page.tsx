@@ -2,6 +2,7 @@ import Link from "next/link";
 import { starterWordSets } from "@/features/word-sets/data";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TrainingClient } from "./TrainingClient";
+import { shuffleArray } from "@/features/word-sets/training";
 
 type PageProps = {
   params: Promise<{
@@ -9,14 +10,18 @@ type PageProps = {
   }>;
 };
 
-// Fisher-Yates shuffle implementation for unbiased randomness
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
+// Local component to dry up the empty state branches
+function TrainingUnavailable({ title, description, backHref, backLabel }: { title: string, description: string, backHref: string, backLabel: string }) {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-4 py-16">
+      <EmptyState title={title} description={description} />
+      <div className="mt-6 flex justify-center">
+        <Link href={backHref} className="text-sm font-medium text-blue-600 hover:underline">
+          &larr; {backLabel}
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export default async function TrainingSessionPage({ params }: PageProps) {
@@ -29,34 +34,24 @@ export default async function TrainingSessionPage({ params }: PageProps) {
   // Handle the case where the word set is not found
   if (!wordSet) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-16">
-        <EmptyState
-          title="Set not found"
-          description="The vocabulary set you are looking for does not exist."
-        />
-        <div className="mt-6 flex justify-center">
-          <Link href="/word-sets" className="text-sm font-medium text-blue-600 hover:underline">
-            &larr; Back to Word Sets
-          </Link>
-        </div>
-      </div>
+      <TrainingUnavailable 
+        title="Set not found"
+        description="The vocabulary set you are looking for does not exist."
+        backHref="/word-sets"
+        backLabel="Back to Word Sets"
+      />
     );
   }
 
   // Guard clause for sets with < 4 words to prevent runtime errors
   if (wordSet.words.length < 4) {
     return (
-      <div className="mx-auto w-full max-w-5xl px-4 py-16">
-        <EmptyState
-          title="Not enough words"
-          description="This word set needs at least 4 words to start a training session."
-        />
-        <div className="mt-6 flex justify-center">
-          <Link href={`/word-sets/${wordSet.id}`} className="text-sm font-medium text-blue-600 hover:underline">
-            &larr; Back to Word Set
-          </Link>
-        </div>
-      </div>
+      <TrainingUnavailable 
+        title="Not enough words"
+        description="This word set needs at least 4 words to start a training session."
+        backHref={`/word-sets/${wordSet.id}`}
+        backLabel="Back to Word Set"
+      />
     );
   }
 

@@ -2,32 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { type Word, type WordSet } from "@/features/word-sets/data";
-
-// Fisher-Yates shuffle implementation for unbiased randomness
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
-
-// Helper function to generate options (moved outside so it doesn't get recreated on every render)
-const generateOptions = (currentWord: Word, allWords: Word[]) => {
-  if (!currentWord) return [];
-  // Take all words except the current one
-  const otherWords = allWords.filter((w) => w.id !== currentWord.id);
-  // Shuffle the other words to get random incorrect options
-  const shuffledOthers = shuffleArray(otherWords);
-  // Take the first 3 as incorrect options
-  const incorrectOptions = shuffledOthers.slice(0, 3).map((w) => w.ukrainianTranslation);
-  
-  // Add the correct translation and shuffle again
-  const allOptions = [...incorrectOptions, currentWord.ukrainianTranslation];
-  return shuffleArray(allOptions);
-};
+import { type WordSet } from "@/features/word-sets/data";
+import { generateOptions } from "@/features/word-sets/training";
 
 export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,11 +13,6 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
   
   // Generate initial options lazily inside useState
   const [options, setOptions] = useState<string[]>(initialOptions);
-
-  /* Only run ONCE when the component mounts on the client to prevent SSR hydration mismatches */
-  // Wrap setIsMounted in a setTimeout to make the state update asynchronous
-  /* This resolves the strict linter error about "synchronous setState inside an effect"
-  while keeping the SSR hydration safety completely intact. */
 
   const currentWord = wordSet.words[currentIndex];
 
@@ -66,8 +37,6 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
       setIsFinished(true); // Clean processing of the last question
     }
   };
-
-  // Wait until client has mounted to render (To completely avoids the hydration)
 
   // Training completion screen
   if (isFinished) {
