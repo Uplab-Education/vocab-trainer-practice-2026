@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { type WordSet } from "@/features/word-sets/data";
 import { generateOptions } from "@/features/word-sets/training";
+import { Button } from "@/components/ui/button";
+import { TrainingProgress } from "@/components/training/TrainingProgress";
+import { TrainingSummary } from "@/components/training/TrainingSummary";
+import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
 
 export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -38,26 +41,10 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
     }
   };
 
-  // Training completion screen
+  // Training completion screen extracted to a separate component
   if (isFinished) {
-    return (
-      <div className="mx-auto max-w-xl text-center py-16">
-        <h2 className="text-3xl font-bold text-slate-900 mb-4">Training Complete!</h2>
-        <p className="text-lg text-slate-600 mb-8">
-          You scored <span className="font-bold text-slate-900">{score}</span> out of {wordSet.words.length}.
-        </p>
-        <Link
-          href={`/word-sets/${wordSet.id}`}
-          className="inline-flex justify-center rounded-md bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-        >
-          Back to Word Set
-        </Link>
-      </div>
-    );
+    return <TrainingSummary score={score} total={wordSet.words.length} wordSetId={wordSet.id} />;
   }
-
-  // Calculating progress for a scale
-  const progress = ((currentIndex + 1) / wordSet.words.length) * 100;
 
   return (
     <div className="mx-auto max-w-2xl py-8 px-4 w-full">
@@ -68,26 +55,11 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
           : "Choose the correct translation."}
       </div>
 
-      {/* Progress bar */}
-      <div className="mb-8">
-        <div className="flex justify-between text-sm font-medium text-slate-500 mb-2">
-          <span>{wordSet.title}</span>
-          <span>{currentIndex + 1} / {wordSet.words.length}</span>
-        </div>
-        <div 
-          className="w-full bg-slate-200 rounded-full h-2"
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Training progress"
-        >
-          <div
-            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
+      <TrainingProgress 
+        title={wordSet.title} 
+        current={currentIndex + 1} 
+        total={wordSet.words.length} 
+      />
 
       {/* Key word */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center mb-8">
@@ -97,58 +69,23 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
 
       {/* Answer options */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {options.map((option, idx) => {
-          const isSelected = selectedAnswer === option;
-          const isCorrect = option === currentWord.ukrainianTranslation;
-          
-          let buttonStyle = "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300";
-          let icon = null;
-          
-          if (selectedAnswer) {
-            if (isCorrect) {
-              buttonStyle = "border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500";
-              icon = (
-                <svg className="ml-2 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              );
-            } else if (isSelected) {
-              buttonStyle = "border-red-500 bg-red-50 text-red-700 ring-1 ring-red-500";
-              icon = (
-                <svg className="ml-2 h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              );
-            } else {
-              buttonStyle = "border-slate-200 bg-slate-50 text-slate-400 opacity-50 cursor-not-allowed";
-            }
-          }
-
-          return (
-            <button
-              key={idx}
-              onClick={() => handleAnswer(option)}
-              disabled={selectedAnswer !== null}
-              aria-pressed={isSelected}
-              className={`flex items-center justify-center px-6 py-4 rounded-lg border-2 text-lg font-medium transition-all duration-200 ${buttonStyle}`}
-            >
-              <span>{option}</span>
-              {icon}
-            </button>
-          );
-        })}
+        {options.map((option) => (
+          <AnswerButton
+            key={option}
+            option={option}
+            state={getAnswerState(option, selectedAnswer, currentWord.ukrainianTranslation)}
+            onSelect={handleAnswer}
+          />
+        ))}
       </div>
 
       {/* "Next" button (appears only after selection) */}
       <div className="h-12">
         {selectedAnswer && (
           <div className="flex justify-end">
-            <button
-              onClick={handleNext}
-              className="rounded-md bg-slate-950 px-8 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
-            >
+            <Button onClick={handleNext}>
               {currentIndex < wordSet.words.length - 1 ? "Next Word" : "Finish Training"}
-            </button>
+            </Button>
           </div>
         )}
       </div>
