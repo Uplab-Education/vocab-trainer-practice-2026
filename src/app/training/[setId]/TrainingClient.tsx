@@ -1,0 +1,94 @@
+"use client";
+
+import { useState } from "react";
+import { type WordSet } from "@/features/word-sets/data";
+import { generateOptions } from "@/features/word-sets/training";
+import { Button } from "@/components/ui/button";
+import { TrainingProgress } from "@/components/training/TrainingProgress";
+import { TrainingSummary } from "@/components/training/TrainingSummary";
+import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
+
+export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+  
+  // Generate initial options lazily inside useState
+  const [options, setOptions] = useState<string[]>(initialOptions);
+
+  const currentWord = wordSet.words[currentIndex];
+
+  const handleAnswer = (answer: string) => {
+    if (selectedAnswer) return; // Prevent changing answer after selection
+    
+    setSelectedAnswer(answer);
+    if (answer === currentWord.ukrainianTranslation) {
+      setScore((s) => s + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < wordSet.words.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setSelectedAnswer(null);
+      
+      // Generate new options synchronously in the event handler
+      setOptions(generateOptions(wordSet.words[nextIndex], wordSet.words));
+    } else {
+      setIsFinished(true); // Clean processing of the last question
+    }
+  };
+
+  // Training completion screen extracted to a separate component
+  if (isFinished) {
+    return <TrainingSummary score={score} total={wordSet.words.length} wordSetId={wordSet.id} />;
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl py-8 px-4 w-full">
+      {/* Hidden aria-live region to announce correct/incorrect to screen readers */}
+      <div aria-live="polite" className="sr-only">
+        {selectedAnswer 
+          ? (selectedAnswer === currentWord.ukrainianTranslation ? "Correct answer selected." : "Incorrect answer selected.") 
+          : "Choose the correct translation."}
+      </div>
+
+      <TrainingProgress 
+        title={wordSet.title} 
+        current={currentIndex + 1} 
+        total={wordSet.words.length} 
+      />
+
+      {/* Key word */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center mb-8">
+        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">Select the correct translation</h3>
+        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900">{currentWord.englishWord}</h1>
+      </div>
+
+      {/* Answer options */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        {options.map((option) => (
+          <AnswerButton
+            key={option}
+            option={option}
+            state={getAnswerState(option, selectedAnswer, currentWord.ukrainianTranslation)}
+            onSelect={handleAnswer}
+          />
+        ))}
+      </div>
+
+      {/* "Next" button (appears only after selection) */}
+      <div className="h-12">
+        {selectedAnswer && (
+          <div className="flex justify-end">
+            <Button onClick={handleNext}>
+              {currentIndex < wordSet.words.length - 1 ? "Next Word" : "Finish Training"}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
