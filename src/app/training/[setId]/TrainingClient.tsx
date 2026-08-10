@@ -5,45 +5,63 @@ import { type WordSet } from "@/features/word-sets/data";
 import { generateOptions } from "@/features/word-sets/training";
 import { Button } from "@/components/ui/button";
 import { TrainingProgress } from "@/components/training/TrainingProgress";
-import { TrainingSummary } from "@/components/training/TrainingSummary";
+import { TrainingSummary, type AnswerRecord } from "@/components/training/TrainingSummary";
 import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
 
 export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   
-  // Generate initial options lazily inside useState
+  //Track detailed answers instead of just a score number
+  const [results, setResults] = useState<AnswerRecord[]>([]);
+  
   const [options, setOptions] = useState<string[]>(initialOptions);
 
   const currentWord = wordSet.words[currentIndex];
 
   const handleAnswer = (answer: string) => {
-    if (selectedAnswer) return; // Prevent changing answer after selection
-    
+    if (selectedAnswer) return; 
     setSelectedAnswer(answer);
-    if (answer === currentWord.ukrainianTranslation) {
-      setScore((s) => s + 1);
-    }
   };
 
   const handleNext = () => {
+    if (!selectedAnswer) return; 
+
+    // Save the result before moving to the next question
+    const isCorrect = selectedAnswer === currentWord.ukrainianTranslation;
+    setResults((prev) => [
+      ...prev,
+      { word: currentWord, selected: selectedAnswer, isCorrect }
+    ]);
+
     if (currentIndex < wordSet.words.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       setSelectedAnswer(null);
-      
-      // Generate new options synchronously in the event handler
       setOptions(generateOptions(wordSet.words[nextIndex], wordSet.words));
     } else {
-      setIsFinished(true); // Clean processing of the last question
+      setIsFinished(true); 
     }
   };
 
-  // Training completion screen extracted to a separate component
+  const handleRetry = () => {
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setResults([]);
+    setIsFinished(false);
+    setOptions(generateOptions(wordSet.words[0], wordSet.words));
+  };
+
   if (isFinished) {
-    return <TrainingSummary score={score} total={wordSet.words.length} wordSetId={wordSet.id} />;
+    return (
+      <TrainingSummary 
+        results={results} 
+        total={wordSet.words.length} 
+        wordSetId={wordSet.id} 
+        onRetry={handleRetry} 
+      />
+    );
   }
 
   return (
@@ -79,7 +97,7 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
         ))}
       </div>
 
-      {/* "Next" button (appears only after selection) */}
+      {/* "Next" button(appears only after selection)*/}
       <div className="h-12">
         {selectedAnswer && (
           <div className="flex justify-end">
