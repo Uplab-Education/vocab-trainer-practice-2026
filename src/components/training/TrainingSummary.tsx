@@ -16,7 +16,7 @@ type TrainingSummaryProps = {
 };
 
 export function TrainingSummary({ results, total, wordSetId, onRetry }: TrainingSummaryProps) {
-  const correctCount = results.filter(r => r.isCorrect).length;
+  const correctCount = results.filter((r) => r.isCorrect).length;
   const incorrectCount = total - correctCount;
   const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
