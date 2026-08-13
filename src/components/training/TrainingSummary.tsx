@@ -60,8 +60,8 @@ export function TrainingSummary({ results, total, wordSetId, onRetry }: Training
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {results.map((r, idx) => (
-                <tr key={idx} className="hover:bg-slate-50">
+              {results.map((r) => (
+                <tr key={r.word.id} className="hover:bg-slate-50">
                   <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">{r.word.englishWord}</td>
                   <td className={`whitespace-nowrap px-6 py-4 text-sm font-medium ${r.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                     {r.selected}
