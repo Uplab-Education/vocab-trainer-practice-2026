@@ -87,10 +87,10 @@ export function TrainingSummary({ results, total, wordSetId, onRetry }: Training
           Retry Session
         </Button>
         <Link
-          href={`/word-sets/${wordSetId}`}
+          href="/word-sets"
           className="w-full inline-flex justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:w-auto"
         >
-          Back to Word Set
+          Back to Word Sets
         </Link>
       </div>
     </div>
