@@ -186,7 +186,7 @@ function AccountControl({
             </div>
             <Separator className="my-1 h-px bg-slate-100" />
             <Menu.Item
-              className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 outline-none hover:bg-red-50 data-highlighted:bg-red-50"
+              className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 outline-none hover:bg-red-50 data-[highlighted]:bg-red-50"
               onClick={() => {
                 void logout();
               }}

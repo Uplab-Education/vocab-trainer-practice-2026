@@ -2,13 +2,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import {starterProgressData, type RecentSession} from "@/features/progress/data";
-//import {emptyProgressData, type RecentSession} from "@/features/progress/data";
+import { emptyProgressData, starterProgressData, type RecentSession } from "@/features/progress/data";
 
 export default function DashboardPage() {
-  /*Toggle this variable to test the empty state: const data = emptyProgressData; */
-  const data = starterProgressData;
-  /*Check if the user has any progress*/
+  const SHOW_EMPTY_STATE = false; 
+  const data = SHOW_EMPTY_STATE ? emptyProgressData : starterProgressData;
+
   const hasProgress = data.learnedWords > 0 || data.recentSessions.length > 0;
 
   return (
@@ -34,8 +33,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="mt-8 space-y-8">
-          {/*Stats Grid using your existing StatCard component*/}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard 
               label="Learned Words" 
               value={data.learnedWords.toString()} 
@@ -51,6 +50,11 @@ export default function DashboardPage() {
               label="Daily Goal" 
               value={`${data.dailyGoal.current} / ${data.dailyGoal.target}`} 
               helper="Words practiced today" 
+            />
+            <StatCard
+              label="Active Sets"
+              value={data.activeSets.toString()}
+              helper="Sets currently in rotation"
             />
             <StatCard 
               label="Needs Review" 
