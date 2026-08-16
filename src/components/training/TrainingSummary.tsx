@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { type Word } from "@/features/word-sets/data";
+import { calculateAccuracy } from "@/features/training/logic";
 
 export type AnswerRecord = {
   word: Word;
@@ -18,7 +19,7 @@ type TrainingSummaryProps = {
 export function TrainingSummary({ results, total, onRetry }: TrainingSummaryProps) {
   const correctCount = results.filter((r) => r.isCorrect).length;
   const incorrectCount = total - correctCount;
-  const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+  const accuracy = calculateAccuracy(correctCount, total);
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8">
