@@ -3,12 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/page-header";
-import Papa from "papaparse"; // Imported Papa Parse
-
-type ParsedRow = {
-  englishWord: string;
-  ukrainianTranslation: string;
-};
+import Papa from "papaparse";
+import { validateHeaders, extractValidRows, type ParsedRow } from "@/features/admin/csv-logic";
 
 export default function ImportPreviewPage() {
   const [rows, setRows] = useState<ParsedRow[]>([]);
@@ -28,7 +24,7 @@ export default function ImportPreviewPage() {
     reader.onload = (event) => {
       let text = event.target?.result as string;
       /*Clean up the CSV text by removing spaces after commas before quotes to ensure proper parsing*/
-      text = text.replace(/,\s+"/g, ',"');
+      text = text.replace(/,\s+"/g, ',"'); 
       parseCSV(text);
     };
     reader.onerror = () => {
@@ -42,7 +38,6 @@ export default function ImportPreviewPage() {
     const parsed = Papa.parse<string[]>(text, {
       skipEmptyLines: true,
     });
-
     const rowsData = parsed.data;
     
     if (rowsData.length < 2) {
@@ -50,29 +45,17 @@ export default function ImportPreviewPage() {
       return;
     }
 
-    /*Get headers and find indices for required columns(ignoring the register)*/
-    const headers = rowsData[0].map((h) => h.trim().toLowerCase());
-    const englishIdx = headers.findIndex((h) => h.includes('english'));
-    const ukrainianIdx = headers.findIndex((h) => h.includes('ukrainian'));
+    /* Use the extracted, tested logic for header validation */
+    const { isValid, englishIdx, ukrainianIdx } = validateHeaders(rowsData[0]);
 
-    if (englishIdx === -1 || ukrainianIdx === -1) {
-      setError("Invalid file structure. Required columns 'English Word' and 'Ukrainian Translation' are missing.");
+    if (!isValid) {
+      setError("Invalid file structure. Required columns 'English' and 'Ukrainian' are missing.");
       return;
     }
 
-    /*Parse valid rows into structured data*/
-    const parsedData: ParsedRow[] = [];
-    for (let i = 1; i < rowsData.length; i++) {
-      const columns = rowsData[i];
-      
-      if (columns.length > Math.max(englishIdx, ukrainianIdx)) {
-        parsedData.push({
-          englishWord: columns[englishIdx]?.trim() || "",
-          ukrainianTranslation: columns[ukrainianIdx]?.trim() || "",
-        });
-      }
-    }
-    
+    /* Use the extracted, tested logic to get structured rows */
+    // rowsData.slice(1) skips the header row
+    const parsedData = extractValidRows(rowsData.slice(1), englishIdx, ukrainianIdx);
     setRows(parsedData);
   };
 
