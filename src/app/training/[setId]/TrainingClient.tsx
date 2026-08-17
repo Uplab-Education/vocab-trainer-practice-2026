@@ -68,7 +68,7 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
       {/* Hidden aria-live region to announce correct/incorrect to screen readers */}
       <div aria-live="polite" className="sr-only">
         {selectedAnswer 
-          ? (selectedAnswer === currentWord.ukrainianTranslation ? "Correct answer selected." : "Incorrect answer selected.") 
+          ? (checkAnswer(selectedAnswer, currentWord.ukrainianTranslation) ? "Correct answer selected." : "Incorrect answer selected.") 
           : "Choose the correct translation."}
       </div>
 
