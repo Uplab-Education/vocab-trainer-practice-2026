@@ -1,8 +1,8 @@
+import "./globals.css";
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "@/auth/auth-provider";
 import { getCurrentUser } from "@/auth/session";
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Vocabulary Trainer",
