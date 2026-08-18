@@ -8,7 +8,13 @@ export default function DashboardPage() {
   const SHOW_EMPTY_STATE = false; 
   const data = SHOW_EMPTY_STATE ? emptyProgressData : starterProgressData;
 
-  const hasProgress = data.learnedWords > 0 || data.recentSessions.length > 0;
+  /*Check if the user has ANY active metrics*/
+  const hasProgress = 
+    data.learnedWords > 0 || 
+    data.recentSessions.length > 0 ||
+    data.activeSets > 0 ||
+    data.hardWords > 0 ||
+    data.dailyGoal.current > 0;
 
   return (
     <>
