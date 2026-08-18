@@ -1,35 +1,29 @@
-import Link from 'next/link';
-import { WordSet } from '@/features/word-sets/data';
+import Link from "next/link";
 
-type WordSetCardProps = {
-  wordSet: WordSet;
+type DBWordSetCardProps = {
+  id: string;
+  title: string;
+  createdAt: Date | string;
 };
 
-export function WordSetCard({ wordSet }: WordSetCardProps) {
-  const wordCount = wordSet.words.length;
-  
-  /*Get unique categories and difficulties from the words in the word set*/
-  const categories = Array.from(new Set(wordSet.words.map(w => w.category))).join(', ');
-  const difficulties = Array.from(new Set(wordSet.words.map(w => w.difficulty))).join(', ');
-
+export function WordSetCard({ wordSet }: { wordSet: DBWordSetCardProps }) {
   return (
-    <Link href={`/word-sets/${wordSet.id}`} className="block h-full">
-      <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
-        <h3 className="text-lg font-semibold text-slate-950">{wordSet.title}</h3>
-        <p className="mt-2 grow text-sm text-slate-600">{wordSet.description}</p>
-        
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
-            {wordCount} words
-          </span>
-          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-blue-700 truncate max-w-[150px]">
-            {categories}
-          </span>
-          <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-orange-700">
-            {difficulties}
-          </span>
-        </div>
-      </article>
+    <Link
+      href={`/word-sets/${wordSet.id}`}
+      className="group block rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-md"
+    >
+      <h3 className="mb-2 text-xl font-bold text-slate-900 group-hover:text-blue-600">
+        {wordSet.title}
+      </h3>
+      
+      <div className="mt-4 flex items-center justify-between">
+        <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+          Study Set
+        </span>
+        <span className="text-sm font-medium text-slate-500 max-w-37.5 truncate">
+          View &rarr;
+        </span>
+      </div>
     </Link>
   );
 }

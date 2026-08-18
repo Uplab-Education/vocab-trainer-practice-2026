@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { type WordSet } from "@/features/word-sets/data";
-import { generateOptions } from "@/features/word-sets/training";
+import { generateOptions, type DBTrainingSet } from "@/features/word-sets/training";
 import { Button } from "@/components/ui/button";
 import { TrainingProgress } from "@/components/training/TrainingProgress";
 import { TrainingSummary, type AnswerRecord } from "@/components/training/TrainingSummary";
 import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
 import { checkAnswer } from "@/features/training/logic";
 
-export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
+export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainingSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);

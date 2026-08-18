@@ -15,7 +15,7 @@ export default async function WordSetsPage() {
       />
       
       {/* Pass the database sets to the interactive client component */}
-      <WordSetsClient initialSets={wordSets} />
+      <WordSetsClient wordSets={wordSets} />
     </>
   );
 }

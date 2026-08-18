@@ -43,7 +43,7 @@ export function WordSetsClient({ wordSets }: { wordSets: DBWordSet[] }) {
           {filteredSets.map((set) => (
             // Note: You might need to update WordSetCard to handle the new DB structure 
             // if it expects properties that no longer exist (like word count or category).
-            <WordSetCard key={set.id} wordSet={set as any} />
+            <WordSetCard key={set.id} wordSet={set} />
           ))}
         </div>
       ) : (
