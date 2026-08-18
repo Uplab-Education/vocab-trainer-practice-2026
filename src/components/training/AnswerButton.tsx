@@ -1,4 +1,5 @@
 import { CheckIcon, CrossIcon } from "@/components/ui/icons";
+import { checkAnswer } from "@/features/training/logic";
 
 export type AnswerState = "idle" | "correct" | "incorrect" | "muted";
 
@@ -11,7 +12,7 @@ type AnswerButtonProps = {
 // Function to determine the state of the answer option
 export function getAnswerState(option: string, selectedAnswer: string | null, correctTranslation: string): AnswerState {
   if (!selectedAnswer) return "idle";
-  if (option === correctTranslation) return "correct";
+  if (checkAnswer(option, correctTranslation)) return "correct";
   if (option === selectedAnswer) return "incorrect";
   return "muted";
 }

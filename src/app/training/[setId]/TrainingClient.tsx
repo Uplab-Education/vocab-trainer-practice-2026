@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TrainingProgress } from "@/components/training/TrainingProgress";
 import { TrainingSummary, type AnswerRecord } from "@/components/training/TrainingSummary";
 import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
+import { checkAnswer } from "@/features/training/logic";
 
 export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,10 +27,8 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
   };
 
   const handleNext = () => {
-    if (!selectedAnswer) return; 
-
-    // Save the result before moving to the next question
-    const isCorrect = selectedAnswer === currentWord.ukrainianTranslation;
+    if (!selectedAnswer) return;
+    const isCorrect = checkAnswer(selectedAnswer, currentWord.ukrainianTranslation);
     setResults((prev) => [
       ...prev,
       { word: currentWord, selected: selectedAnswer, isCorrect }
@@ -69,7 +68,7 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
       {/* Hidden aria-live region to announce correct/incorrect to screen readers */}
       <div aria-live="polite" className="sr-only">
         {selectedAnswer 
-          ? (selectedAnswer === currentWord.ukrainianTranslation ? "Correct answer selected." : "Incorrect answer selected.") 
+          ? (checkAnswer(selectedAnswer, currentWord.ukrainianTranslation) ? "Correct answer selected." : "Incorrect answer selected.") 
           : "Choose the correct translation."}
       </div>
 
