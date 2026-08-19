@@ -85,9 +85,9 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainin
 
       {/* Answer options */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {options.map((option) => (
+        {options.map((option, index) => (
           <AnswerButton
-            key={option}
+            key={`${option}-${index}`}
             option={option}
             state={getAnswerState(option, selectedAnswer, currentWord.ukrainianTranslation)}
             onSelect={handleAnswer}
