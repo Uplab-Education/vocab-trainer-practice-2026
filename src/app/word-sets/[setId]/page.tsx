@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { starterWordSets } from "@/features/word-sets/data";
+import { getWordSetById } from "@/features/word-sets/repository";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -9,12 +9,12 @@ type PageProps = {
   }>;
 };
 
-/*Async function to fetch the word set by ID*/
+/*Async function to fetch the word set by ID from PostgreSQL*/
 export default async function WordSetDetailsPage({ params }: PageProps) {
   const resolvedParams = await params;
   
-  /*Searching for a set of words by ID*/
-  const wordSet = starterWordSets.find((set) => set.id === resolvedParams.setId);
+  /*Searching for a set of words by ID via Data Access Layer*/
+  const wordSet = await getWordSetById(resolvedParams.setId);
 
   /*Handling unknown setId (Not Found State)*/
   if (!wordSet) {
@@ -33,9 +33,8 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
     );
   }
 
-  /*Collect unique categories and difficulties for display in the header*/
-  const categories = Array.from(new Set(wordSet.words.map((w) => w.category))).join(', ');
-  const difficulties = Array.from(new Set(wordSet.words.map((w) => w.difficulty))).join(', ');
+  const categories = Array.from(new Set(wordSet.words.map((w) => w.category).filter(Boolean))).join(', ');
+  const difficulties = Array.from(new Set(wordSet.words.map((w) => w.difficulty).filter(Boolean))).join(', ');
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
@@ -46,19 +45,23 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
       <PageHeader
         eyebrow="Vocabulary Set details"
         title={wordSet.title}
-        description={wordSet.description}
+        description={wordSet.description || "Review the words in this set before starting your training session."}
       />
 
       <div className="mb-8 mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex w-full flex-wrap gap-2 text-sm sm:w-auto">
-          <span className="inline-block max-w-full break-words rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
-            {categories}
-          </span>
-          <span className="inline-block whitespace-nowrap rounded-full bg-orange-50 px-3 py-1 font-medium text-orange-700">
-            {difficulties}
-          </span>
+          {categories && (
+            <span className="inline-block max-w-full wrap-break-words rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
+              {categories}
+            </span>
+          )}
+          {difficulties && (
+            <span className="inline-block whitespace-nowrap rounded-full bg-orange-50 px-3 py-1 font-medium text-orange-700">
+              {difficulties}
+            </span>
+          )}
         </div>
-        
+
         {/*Call-to-action button*/}
         <Link 
           href={`/training/${wordSet.id}`}
@@ -83,7 +86,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
               <tr key={word.id} className="hover:bg-slate-50">
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">{word.englishWord}</td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{word.ukrainianTranslation}</td>
-                <td className="px-6 py-4 text-sm text-slate-500">{word.exampleSentence}</td>
+                <td className="px-6 py-4 text-sm text-slate-500">{word.exampleSentence || "—"}</td>
               </tr>
             ))}
           </tbody>

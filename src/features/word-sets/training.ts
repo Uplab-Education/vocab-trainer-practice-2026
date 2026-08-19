@@ -2,11 +2,15 @@ export type DBTrainingWord = {
   id: string;
   englishWord: string;
   ukrainianTranslation: string;
+  category?: string | null;
+  difficulty?: string | null;
+  exampleSentence?: string | null;
 };
 
 export type DBTrainingSet = {
   id: string;
   title: string;
+  description?: string | null;
   words: DBTrainingWord[];
 };
 
