@@ -27,34 +27,37 @@ export async function createWordSet(formData: FormData) {
   const category = formData.get("category") as string;
   const difficulty = formData.get("difficulty") as string;
   const wordsJson = formData.get("words") as string;
-  
+
   /*Automatically generate a nice ID from the title(e.g., "My New Set"->"my-new-set")*/
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-  /*Insert the new word set into the database*/
-  await db.insert(wordSets).values({
-    id,
-    title,
-    description,
-  });
+  /*Use a transaction to ensure that the word set and its words are created together*/
+  await db.transaction(async (tx) => {
+    /*Insert the new word set into the database*/
+    await tx.insert(wordSets).values({
+      id,
+      title,
+      description,
+    });
 
-  /*Add words if provided (expecting a JSON string of words)*/
-  if (wordsJson) {
-    const wordsList: ParsedWord[] = JSON.parse(wordsJson);
-    if (wordsList.length > 0) {
-      const wordsToInsert = wordsList.map((w, index) => ({
-        /*Generate a simple and readable ID for each word*/
-        id: `word-${id}-${index + 1}`,
-        wordSetId: id,
-        englishWord: w.englishWord,
-        ukrainianTranslation: w.ukrainianTranslation,
-        exampleSentence: w.exampleSentence || "",
-        category: category,
-        difficulty: difficulty,
-      }));
-      await db.insert(words).values(wordsToInsert);
+    /*Add words if provided (expecting a JSON string of words)*/
+    if (wordsJson) {
+      const wordsList: ParsedWord[] = JSON.parse(wordsJson);
+      if (wordsList.length > 0) {
+        const wordsToInsert = wordsList.map((w, index) => ({
+          /*Generate a simple and readable ID for each word*/
+          id: `word-${id}-${index + 1}`,
+          wordSetId: id,
+          englishWord: w.englishWord,
+          ukrainianTranslation: w.ukrainianTranslation,
+          exampleSentence: w.exampleSentence || "",
+          category: category,
+          difficulty: difficulty,
+        }));
+        await tx.insert(words).values(wordsToInsert);
+      }
     }
-  }
+  });
 
   revalidatePath("/admin");
   revalidatePath("/word-sets");
@@ -69,32 +72,35 @@ export async function updateWordSet(id: string, formData: FormData) {
   const difficulty = formData.get("difficulty") as string;
   const wordsJson = formData.get("words") as string;
 
-  /*Update the word set's title and description*/
-  await db.update(wordSets).set({
-    title,
-    description,
-  }).where(eq(wordSets.id, id));
+  /*Use a transaction to ensure data integrity when updating the word set and its words*/
+  await db.transaction(async (tx) => {
+    /*Update the word set's title and description*/
+    await tx.update(wordSets).set({
+      title,
+      description,
+    }).where(eq(wordSets.id, id));
 
-  // Update the words: for simplicity, deleting old words and inserting new ones
-  if (wordsJson) {
-    const wordsList: ParsedWord[] = JSON.parse(wordsJson);
+    // Update the words: for simplicity, deleting old words and inserting new ones
+    if (wordsJson) {
+      const wordsList: ParsedWord[] = JSON.parse(wordsJson);
 
-    await db.delete(words).where(eq(words.wordSetId, id));
+      await tx.delete(words).where(eq(words.wordSetId, id));
 
-    if (wordsList.length > 0) {
-      const wordsToInsert = wordsList.map((w, index) => ({
-        /*Generate a simple and readable ID for each word*/
-        id: `word-${id}-${index + 1}`,
-        wordSetId: id,
-        englishWord: w.englishWord,
-        ukrainianTranslation: w.ukrainianTranslation,
-        exampleSentence: w.exampleSentence || "",
-        category: category,
-        difficulty: difficulty,
-      }));
-      await db.insert(words).values(wordsToInsert);
+      if (wordsList.length > 0) {
+        const wordsToInsert = wordsList.map((w, index) => ({
+          /*Generate a simple and readable ID for each word*/
+          id: `word-${id}-${index + 1}`,
+          wordSetId: id,
+          englishWord: w.englishWord,
+          ukrainianTranslation: w.ukrainianTranslation,
+          exampleSentence: w.exampleSentence || "",
+          category: category,
+          difficulty: difficulty,
+        }));
+        await tx.insert(words).values(wordsToInsert);
+      }
     }
-  }
+  });
 
   revalidatePath("/admin");
   revalidatePath("/word-sets");
