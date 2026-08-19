@@ -51,7 +51,7 @@ export default async function WordSetDetailsPage({ params }: PageProps) {
       <div className="mb-8 mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex w-full flex-wrap gap-2 text-sm sm:w-auto">
           {categories && (
-            <span className="inline-block max-w-full wrap-break-words rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
+            <span className="inline-block max-w-full wrap-break-word rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700">
               {categories}
             </span>
           )}

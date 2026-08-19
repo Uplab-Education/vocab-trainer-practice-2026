@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { db } from "@/db";
 import { deleteWordSet } from "@/app/admin/actions"; 
+import { getAllWordSets } from "@/features/word-sets/repository"; 
 
 export async function AdminWordSetsTable() {
-  /*Fetch all word sets along with their associated words, ordered by creation date (newest first)*/
-  const allSets = await db.query.wordSets.findMany({
-    with: { words: true },
-    orderBy: (wordSets, { desc }) => [desc(wordSets.createdAt)],
-  });
+  /*Fetch all word sets via Data Access Layer*/
+  const allSets = await getAllWordSets();
 
   return (
     <div className="mt-8">

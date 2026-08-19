@@ -25,7 +25,8 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
     difficulty: initialData?.difficulty || "",
     words: initialData?.words && initialData.words.length > 0 
       ? initialData.words 
-      : [{ englishWord: "", ukrainianTranslation: "", exampleSentence: "" }],
+      /*Generate 4 independent objects*/
+      : Array.from({ length: 4 }, () => ({ englishWord: "", ukrainianTranslation: "", exampleSentence: "" })),
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof WordSetFormData, string>>>({});
@@ -39,10 +40,10 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
     if (!formData.category.trim()) newErrors.category = "Category is required";
     if (!formData.difficulty) newErrors.difficulty = "Difficulty is required";
     
-    /*Validate words: at least one word must be filled*/
+    /*Validate words: at least FOUR words must be filled (за зауваженням Copilot)*/
     const validWords = formData.words.filter(w => w.englishWord.trim() && w.ukrainianTranslation.trim());
-    if (validWords.length === 0) {
-      newErrors.words = "Please add at least one valid word (English + Ukrainian)";
+    if (validWords.length < 4) {
+      newErrors.words = "Please add at least 4 valid words (English + Ukrainian)";
     }
     
     setErrors(newErrors);
@@ -76,24 +77,30 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
     if (validate()) {
       setIsLoading(true);
       
-      const data = new FormData();
-      data.append("title", formData.title);
-      data.append("description", formData.description);
-      data.append("category", formData.category);
-      data.append("difficulty", formData.difficulty);
-      
-      /*Filter out empty rows and pass words as a JSON string*/
-      const validWords = formData.words.filter(w => w.englishWord.trim() && w.ukrainianTranslation.trim());
-      data.append("words", JSON.stringify(validWords));
+      try {
+        const data = new FormData();
+        data.append("title", formData.title);
+        data.append("description", formData.description);
+        data.append("category", formData.category);
+        data.append("difficulty", formData.difficulty);
+        
+        /*Filter out empty rows and pass words as a JSON string*/
+        const validWords = formData.words.filter(w => w.englishWord.trim() && w.ukrainianTranslation.trim());
+        data.append("words", JSON.stringify(validWords));
 
-      if (isEditMode && wordSetId) {
-        await updateWordSet(wordSetId, data);
-      } else {
-        await createWordSet(data);
+        if (isEditMode && wordSetId) {
+          await updateWordSet(wordSetId, data);
+        } else {
+          await createWordSet(data);
+        }
+
+        setIsSuccess(true);
+      } catch (error) {
+        console.error("Action failed:", error);
+      } finally {
+        // Guarantee that loading state is reset even if an error occurs
+        setIsLoading(false);
       }
-
-      setIsSuccess(true);
-      setIsLoading(false);
     }
   };
 
@@ -160,7 +167,7 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
         {/*Words Section*/}
         <div className="mt-8 border-t border-slate-200 pt-6">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-medium text-slate-900">Words in this Set</h3>
+            <h3 className="text-lg font-medium text-slate-900">Words in this Set (Minimum 4)</h3>
             <button
               type="button"
               onClick={addWordRow}
@@ -171,7 +178,7 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
             </button>
           </div>
 
-          {errors.words && <p className="mb-4 text-sm text-red-500">{errors.words}</p>}
+          {errors.words && <p className="mb-4 text-sm font-medium text-red-500">{errors.words}</p>}
 
           <div className="space-y-4">
             {formData.words.map((word, index) => (
@@ -204,7 +211,7 @@ export function WordSetForm({ initialData, isEditMode = false, wordSetId }: Word
                     disabled={isLoading}
                   />
                 </div>
-                {formData.words.length > 1 && (
+                {formData.words.length > 4 && (
                   <button
                     type="button"
                     onClick={() => removeWordRow(index)}
