@@ -29,15 +29,23 @@ export async function getWordSetById(id: string) {
 export async function createWordSet(input: CreateWordSetInput) {
   const validatedData = createWordSetSchema.parse(input);
 
+  // Generate a clean ID from the title (e.g., "My Set" -> "my-set")
+  const setId = validatedData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
   /*If saving words fails, the whole set is rolled back*/
   return await db.transaction(async (tx) => {
     const [newSet] = await tx
       .insert(wordSets)
-      .values({ title: validatedData.title })
+      .values({ 
+        id: setId,
+        title: validatedData.title 
+      })
       .returning();
 
     /*Prepare the words arrays with the new Set ID*/
-    const wordsToInsert = validatedData.words.map((word) => ({
+    const wordsToInsert = validatedData.words.map((word, index) => ({
+      /*Generate a unique ID for each word based on the set ID and index*/
+      id: `word-${setId}-${index + 1}`,
       wordSetId: newSet.id,
       englishWord: word.englishWord,
       ukrainianTranslation: word.ukrainianTranslation,
