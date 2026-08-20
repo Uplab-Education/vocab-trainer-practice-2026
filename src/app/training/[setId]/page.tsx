@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { starterWordSets } from "@/features/word-sets/data";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TrainingClient } from "./TrainingClient";
 import { shuffleArray } from "@/features/word-sets/training";
+import { getWordSetById } from "@/features/word-sets/repository";
 
 type PageProps = {
   params: Promise<{
@@ -27,9 +27,7 @@ function TrainingUnavailable({ title, description, backHref, backLabel }: { titl
 export default async function TrainingSessionPage({ params }: PageProps) {
   // Asynchronously retrieve the parameters
   const resolvedParams = await params;
-  
-  // Find the word set based on the provided setId
-  const wordSet = starterWordSets.find((set) => set.id === resolvedParams.setId);
+  const wordSet = await getWordSetById(resolvedParams.setId);
 
   // Handle the case where the word set is not found
   if (!wordSet) {

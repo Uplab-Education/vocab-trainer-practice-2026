@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { WordSetForm } from "@/components/WordSetForm";
 import { EmptyState } from "@/components/ui/empty-state";
-import { starterWordSets } from "@/features/word-sets/data";
+import { getWordSetById } from "@/features/word-sets/repository";
 import Link from "next/link";
 
 type PageProps = {
@@ -12,16 +12,14 @@ type PageProps = {
 
 export default async function EditWordSetPage({ params }: PageProps) {
   const resolvedParams = await params;
-  /*Find the corresponding word set*/
-  const wordSet = starterWordSets.find((set) => set.id === resolvedParams.setId);
+  const wordSet = await getWordSetById(resolvedParams.setId);
 
-  /*Handle unknown setId(Not Found State)*/
   if (!wordSet) {
     return (
       <div className="mx-auto w-full max-w-5xl px-4 py-16">
         <EmptyState
           title="Set not found"
-          description="The vocabulary set you want to edit does not exist."
+          description="The vocabulary set you want to edit does not exist in the database."
         />
         <div className="mt-6 flex justify-center">
           <Link href="/admin" className="text-sm font-medium text-blue-600 hover:underline">
@@ -32,13 +30,21 @@ export default async function EditWordSetPage({ params }: PageProps) {
     );
   }
 
-  /*Extract category and difficulty from the first word to populate the form*/
-  const firstWord = wordSet.words[0];
+  const firstWord = wordSet.words && wordSet.words.length > 0 ? wordSet.words[0] : null;
+  
+  /*Form the initial data for the form, including title, description, category, difficulty, and words*/
   const initialData = {
     title: wordSet.title,
-    description: wordSet.description,
-    category: firstWord ? firstWord.category : "",
-    difficulty: (firstWord ? firstWord.difficulty : "") as "easy" | "medium" | "hard" | "",
+    description: wordSet.description || "",
+    category: firstWord?.category || "",
+    difficulty: (firstWord?.difficulty || "") as "easy" | "medium" | "hard" | "",
+    words: wordSet.words && wordSet.words.length > 0 
+      ? wordSet.words.map(w => ({
+          englishWord: w.englishWord,
+          ukrainianTranslation: w.ukrainianTranslation,
+          exampleSentence: w.exampleSentence || ""
+        }))
+      : [] 
   };
 
   return (
@@ -54,7 +60,7 @@ export default async function EditWordSetPage({ params }: PageProps) {
       />
       
       <div className="mt-8">
-        <WordSetForm initialData={initialData} isEditMode={true} />
+        <WordSetForm initialData={initialData} isEditMode={true} wordSetId={wordSet.id} />
       </div>
     </div>
   );

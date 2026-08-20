@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { type Word } from "@/features/word-sets/data";
 import { calculateAccuracy } from "@/features/training/logic";
+import { type DBTrainingWord } from "@/features/word-sets/training";
 
 export type AnswerRecord = {
-  word: Word;
+  word: DBTrainingWord;
   selected: string;
   isCorrect: boolean;
 };

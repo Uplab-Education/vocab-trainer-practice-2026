@@ -1,35 +1,63 @@
-import Link from 'next/link';
-import { WordSet } from '@/features/word-sets/data';
+import Link from "next/link";
 
-type WordSetCardProps = {
-  wordSet: WordSet;
+export type DBWordSetCardProps = {
+  id: string;
+  title: string;
+  description?: string | null;
+  words?: {
+    category?: string | null;
+    difficulty?: string | null;
+  }[];
 };
 
-export function WordSetCard({ wordSet }: WordSetCardProps) {
-  const wordCount = wordSet.words.length;
+export function WordSetCard({ wordSet }: { wordSet: DBWordSetCardProps }) {
+  /*Count the number of words in the set, defaulting to 0 if undefined*/
+  const wordCount = wordSet.words?.length || 0;
   
-  /*Get unique categories and difficulties from the words in the word set*/
-  const categories = Array.from(new Set(wordSet.words.map(w => w.category))).join(', ');
-  const difficulties = Array.from(new Set(wordSet.words.map(w => w.difficulty))).join(', ');
+  // Витягуємо унікальні категорії та складності
+  const categories = Array.from(
+    new Set(wordSet.words?.map((w) => w.category).filter(Boolean))
+  ).join(', ');
+  
+  const difficulties = Array.from(
+    new Set(wordSet.words?.map((w) => w.difficulty).filter(Boolean))
+  ).join(', ');
 
   return (
-    <Link href={`/word-sets/${wordSet.id}`} className="block h-full">
-      <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
-        <h3 className="text-lg font-semibold text-slate-950">{wordSet.title}</h3>
-        <p className="mt-2 grow text-sm text-slate-600">{wordSet.description}</p>
+    <Link
+      href={`/word-sets/${wordSet.id}`}
+      className="group flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-md"
+    >
+      <div>
+        <h3 className="mb-2 text-xl font-bold text-slate-900 group-hover:text-blue-600">
+          {wordSet.title}
+        </h3>
+        {/* Виводимо опис, якщо він є */}
+        {wordSet.description && (
+          <p className="mb-4 text-sm text-slate-600 line-clamp-2">
+            {wordSet.description}
+          </p>
+        )}
+      </div>
+      
+      {/* Виводимо нові бейджики замість старого "Study Set" */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+          {wordCount} words
+        </span>
         
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
-          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">
-            {wordCount} words
+        {categories && (
+          <span className="inline-flex max-w-37.5 items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+            <span className="truncate">{categories}</span>
           </span>
-          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-blue-700 truncate max-w-[150px]">
-            {categories}
-          </span>
-          <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-orange-700">
+        )}
+        
+        {difficulties && (
+          <span className="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
             {difficulties}
           </span>
-        </div>
-      </article>
+        )}
+      </div>
     </Link>
   );
 }
