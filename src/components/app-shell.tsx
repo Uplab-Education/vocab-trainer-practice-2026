@@ -88,21 +88,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 py-2 shadow-lg backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-xl grid-cols-4 gap-1">
-          {visibleNavigation.slice(0, 4).map((item) => {
+        <div 
+          className="mx-auto grid max-w-xl gap-1" 
+          style={{ gridTemplateColumns: `repeat(${visibleNavigation.length}, minmax(0, 1fr))` }}
+        >
+          {visibleNavigation.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
             return (
               <Link
                 className={cn(
-                  "rounded-md px-2 py-2 text-center text-xs font-medium",
-                  active ? "bg-slate-950 text-white" : "text-slate-500",
+                  "rounded-md px-1 sm:px-2 py-2 text-center text-[10px] sm:text-xs font-medium transition-colors",
+                  active ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-100",
                 )}
                 href={item.href}
                 key={item.href}
               >
-                {item.label}
+                <span className="block truncate">{item.label}</span>
               </Link>
             );
           })}
@@ -186,7 +189,7 @@ function AccountControl({
             </div>
             <Separator className="my-1 h-px bg-slate-100" />
             <Menu.Item
-              className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 outline-none hover:bg-red-50 data-[highlighted]:bg-red-50"
+              className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 outline-none hover:bg-red-50 data-highlighted:bg-red-50"
               onClick={() => {
                 void logout();
               }}

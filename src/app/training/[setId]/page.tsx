@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/auth/session";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TrainingClient } from "./TrainingClient";
 import { shuffleArray } from "@/features/word-sets/training";
@@ -25,6 +27,12 @@ function TrainingUnavailable({ title, description, backHref, backLabel }: { titl
 }
 
 export default async function TrainingSessionPage({ params }: PageProps) {
+  /*Check if the user is authenticated; if not, redirect to login*/
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   // Asynchronously retrieve the parameters
   const resolvedParams = await params;
   const wordSet = await getWordSetById(resolvedParams.setId);
