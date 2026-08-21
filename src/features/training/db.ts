@@ -1,6 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
 import { trainingSessions, trainingAnswers } from "@/db/schema/progress";
+import { wordSets, words } from "@/db/schema/word-sets";
 
 /*Start or resume a training session for a specific user and word set*/
 export async function startOrResumeSession(userId: string, wordSetId: string) {
@@ -65,6 +66,52 @@ export async function completeSession(sessionId: string) {
     .update(trainingSessions)
     .set({ 
       status: "completed",
+      updatedAt: new Date() 
+    })
+    .where(eq(trainingSessions.id, sessionId));
+}
+
+/*Fetch all active sessions for a user directly from DB(PostgreSQL)*/
+export async function getActiveSessionsForUser(userId: string) {
+  const active = await db
+    .select({
+      id: wordSets.id,
+      title: wordSets.title,
+      currentIndex: trainingSessions.currentIndex,
+    })
+    .from(trainingSessions)
+    .innerJoin(wordSets, eq(trainingSessions.wordSetId, wordSets.id))
+    .where(
+      and(
+        eq(trainingSessions.userId, userId),
+        eq(trainingSessions.status, "in_progress")
+      )
+    );
+
+  /*Fetch total words for each active session*/
+  const sessionsWithTotals = await Promise.all(
+    active.map(async (session) => {
+      const setWords = await db.select().from(words).where(eq(words.wordSetId, session.id));
+      return {
+        ...session,
+        totalWords: setWords.length > 0 ? setWords.length : 1
+      };
+    })
+  );
+
+  return sessionsWithTotals;
+}
+
+/*Reset an active session to the beginning and clear previous answers*/
+export async function resetSessionProgress(sessionId: string) {
+  /*Delete previous answers for this specific session so stats don't duplicate*/
+  await db.delete(trainingAnswers).where(eq(trainingAnswers.sessionId, sessionId));
+
+  /*Reset the current index back to 0*/
+  await db
+    .update(trainingSessions)
+    .set({ 
+      currentIndex: 0,
       updatedAt: new Date() 
     })
     .where(eq(trainingSessions.id, sessionId));

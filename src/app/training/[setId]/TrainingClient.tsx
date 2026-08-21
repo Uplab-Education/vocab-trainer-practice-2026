@@ -7,10 +7,10 @@ import { TrainingProgress } from "@/components/training/TrainingProgress";
 import { TrainingSummary, type AnswerRecord } from "@/components/training/TrainingSummary";
 import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
 import { checkAnswer } from "@/features/training/logic";
+import { initializeSessionAction, saveAnswerAction, completeSessionAction, resetSessionAction } from "@/features/training/actions";
 
 export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainingSet, initialOptions: string[] }) {
-  const STORAGE_KEY = `vocab_training_session_${wordSet.id}`;
-/*Initialize basic state variables for the training session*/
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [results, setResults] = useState<AnswerRecord[]>([]);
@@ -18,48 +18,32 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainin
   
   const [isFinished, setIsFinished] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  /*Retrieve saved session from localStorage on mount*/
+  /*Retrieve or create session from Database on mount*/
   useEffect(() => {
-    /*Zero-delay timeout to ensure this runs after the initial render*/
-    const timer = setTimeout(() => {
+    async function loadSession() {
       try {
-        const savedSession = localStorage.getItem(STORAGE_KEY);
-        if (savedSession) {
-          const parsed = JSON.parse(savedSession);
-          setCurrentIndex(parsed.currentIndex);
-          setSelectedAnswer(parsed.selectedAnswer);
-          setResults(parsed.results);
-          setOptions(parsed.options);
+        const session = await initializeSessionAction(wordSet.id);
+        setSessionId(session.id);
+
+        if (session.status === "completed") {
+          setIsFinished(true);
+        } else if (session.currentIndex > 0 && session.currentIndex < wordSet.words.length) {
+          setCurrentIndex(session.currentIndex);
+          /*Generate new options for the current word*/
+          setOptions(generateOptions(wordSet.words[session.currentIndex], wordSet.words));
         }
       } catch (error) {
-        console.error("Failed to parse training session:", error);
+        console.error("Failed to initialize training session:", error);
       } finally {
         setIsMounted(true);
+        setIsLoading(false);
       }
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [STORAGE_KEY]);
-
-  /*Save session to localStorage whenever relevant state changes*/
-  useEffect(() => {
-    if (!isMounted) return;
-
-    if (isFinished) {
-      localStorage.removeItem(STORAGE_KEY);
-    } else {
-      const sessionData = {
-        currentIndex,
-        selectedAnswer,
-        results,
-        options,
-        title: wordSet.title,
-        totalWords: wordSet.words.length,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
     }
-  }, [isMounted, isFinished, currentIndex, selectedAnswer, results, options, STORAGE_KEY, wordSet]);
+
+    loadSession();
+  }, [wordSet]);
 
   const currentWord = wordSet.words[currentIndex];
 
@@ -68,36 +52,62 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainin
     setSelectedAnswer(answer);
   };
 
-  const handleNext = () => {
-    if (!selectedAnswer) return;
+  const handleNext = async () => {
+    if (!selectedAnswer || !sessionId) return;
+    
     const isCorrect = checkAnswer(selectedAnswer, currentWord.ukrainianTranslation);
     setResults((prev) => [
       ...prev,
       { word: currentWord, selected: selectedAnswer, isCorrect }
     ]);
 
-    if (currentIndex < wordSet.words.length - 1) {
-      const nextIndex = currentIndex + 1;
+    const isLastWord = currentIndex >= wordSet.words.length - 1;
+    const nextIndex = isLastWord ? currentIndex : currentIndex + 1;
+
+    /*Save the answer to the database and update the session's current index*/
+    await saveAnswerAction(sessionId, currentWord.id, isCorrect, nextIndex);
+
+    if (!isLastWord) {
       setCurrentIndex(nextIndex);
       setSelectedAnswer(null);
       setOptions(generateOptions(wordSet.words[nextIndex], wordSet.words));
     } else {
+      /*If it's the last word, mark the session as completed in the database*/
+      await completeSessionAction(sessionId);
       setIsFinished(true); 
     }
   };
 
-  const handleRetry = () => {
-    setCurrentIndex(0);
-    setSelectedAnswer(null);
-    setResults([]);
-    setIsFinished(false);
-    setOptions(generateOptions(wordSet.words[0], wordSet.words));
-    localStorage.removeItem(STORAGE_KEY);
+  const handleRetry = async () => {
+    setIsLoading(true);
+    try {
+      if (sessionId) {
+        /*Reset the session in the database and start over*/
+        await resetSessionAction(sessionId);
+      } else {
+        const session = await initializeSessionAction(wordSet.id);
+        setSessionId(session.id);
+      }
+      
+      /*Reset local state for a fresh start*/
+      setCurrentIndex(0);
+      setSelectedAnswer(null);
+      setResults([]);
+      setIsFinished(false);
+      setOptions(generateOptions(wordSet.words[0], wordSet.words));
+    } catch (error) {
+      console.error("Failed to restart session:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Prevent hydration errors by not rendering the interactive part on the server
-  if (!isMounted) {
-    return null;
+  if (!isMounted || isLoading) {
+    return (
+      <div className="mx-auto flex max-w-2xl items-center justify-center py-24">
+        <p className="text-slate-500">Loading your training session...</p>
+      </div>
+    );
   }
 
   if (isFinished) {
@@ -160,7 +170,7 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainin
         ))}
       </div>
 
-      {/* "Next" button(appears only after selection)*/}
+      {/* "Next" button (appears only after selection)*/}
       <div className="h-12">
         {selectedAnswer && (
           <div className="flex justify-end">

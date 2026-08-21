@@ -3,6 +3,7 @@ import "server-only";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { AppUser } from "./users";
+import { redirect } from "next/navigation";
 
 const cookieName = "vocab_trainer_session";
 const maxAgeSeconds = 60 * 60 * 24 * 7;
@@ -76,4 +77,14 @@ export async function setSessionCookie(user: AppUser) {
 export async function clearSessionCookie() {
   const cookieStore = await cookies();
   cookieStore.delete(cookieName);
+}
+
+export async function requireAuth() {
+  const user = await getCurrentUser();
+  
+  if (!user) {
+    redirect("/login");
+  }
+  
+  return user;
 }

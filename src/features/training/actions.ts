@@ -37,3 +37,13 @@ export async function completeSessionAction(sessionId: string) {
   await trainingDb.completeSession(sessionId);
   return { success: true };
 }
+
+export async function resetSessionAction(sessionId: string) {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  await trainingDb.resetSessionProgress(sessionId);
+  return { success: true };
+}

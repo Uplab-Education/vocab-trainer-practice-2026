@@ -1,57 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getActiveSessionsForUser } from "@/features/training/db";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
+import { requireAuth } from "@/auth/session";
 
-type ActiveSession = {
-  id: string;
-  title: string;
-  currentIndex: number;
-  totalWords: number;
-};
+export default async function TrainingPage() {
+  /*Check if the user is authenticated; if not, redirect to login*/
+  const user = await requireAuth();
 
-export default function TrainingPage() {
-  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    /*Use setTimeout to defer the execution until the next tick*/
-    const timer = setTimeout(() => {
-      const sessions: ActiveSession[] = [];
-      
-      /*Go through localStorage to find all active training sessions*/
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        
-        if (key && key.startsWith("vocab_training_session_")) {
-          try {
-            const data = JSON.parse(localStorage.getItem(key) || "");
-            const setId = key.replace("vocab_training_session_", "");
-            
-            sessions.push({
-              id: setId,
-              title: data.title || "Unknown Set",
-              currentIndex: data.currentIndex || 0,
-              /*Avoid division by zero*/
-              totalWords: data.totalWords || 1,
-            });
-          } catch (e) {
-            console.error("Failed to parse session", e);
-          }
-        }
-      }
-      
-      setActiveSessions(sessions);
-      setIsMounted(true);
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  /*Hydration guard to prevent rendering on the server and avoid hydration errors*/
-  if (!isMounted) return null;
+  /*Fetch all active sessions for the authenticated user from the database*/
+  const activeSessions = await getActiveSessionsForUser(user.id);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8">
