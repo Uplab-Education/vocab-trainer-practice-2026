@@ -1,4 +1,18 @@
-import { type Word } from "./data";
+export type DBTrainingWord = {
+  id: string;
+  englishWord: string;
+  ukrainianTranslation: string;
+  category?: string | null;
+  difficulty?: string | null;
+  exampleSentence?: string | null;
+};
+
+export type DBTrainingSet = {
+  id: string;
+  title: string;
+  description?: string | null;
+  words: DBTrainingWord[];
+};
 
 // Fisher-Yates shuffle implementation for unbiased randomness
 export function shuffleArray<T>(array: T[]): T[] {
@@ -10,8 +24,8 @@ export function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
-// Helper function to generate options
-export const generateOptions = (currentWord: Word, allWords: Word[]) => {
+// Helper function to generate options uses the new TrainingWord type
+export const generateOptions = (currentWord: DBTrainingWord, allWords: DBTrainingWord[]) => {
   if (!currentWord) return [];
   // Take all words except the current one
   const otherWords = allWords.filter((w) => w.id !== currentWord.id);

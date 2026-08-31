@@ -47,40 +47,55 @@ export function AuthForm({ mode }: AuthFormProps) {
     >
       <div className="space-y-5">
         {isRegister ? (
-          <label className="block text-sm font-medium">
-            Name
+          <div>
+            <label htmlFor="name" className="mb-1.5 block text-sm font-medium">
+              Name
+            </label>
             <input
-              className="mt-2 block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+              id="name"
+              name="name"
+              autoComplete="name"
+              className="block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
               onChange={(event) => setName(event.target.value)}
               required
               type="text"
               value={name}
             />
-          </label>
+          </div>
         ) : null}
 
-        <label className="block text-sm font-medium">
-          Email
+        <div>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium">
+            Email
+          </label>
           <input
-            className="mt-2 block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            id="email"
+            name="email"
+            autoComplete="email"
+            className="block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
             onChange={(event) => setEmail(event.target.value)}
             required
             type="email"
             value={email}
           />
-        </label>
+        </div>
 
-        <label className="block text-sm font-medium">
-          Password
+        <div>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
+            Password
+          </label>
           <input
-            className="mt-2 block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
+            id="password"
+            name="password"
+            autoComplete={isRegister ? "new-password" : "current-password"}
+            className="block w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100"
             minLength={6}
             onChange={(event) => setPassword(event.target.value)}
             required
             type="password"
             value={password}
           />
-        </label>
+        </div>
 
         {error ? (
           <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

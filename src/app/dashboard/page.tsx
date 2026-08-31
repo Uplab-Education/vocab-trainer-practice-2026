@@ -2,19 +2,33 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
-import { emptyProgressData, starterProgressData, type RecentSession } from "@/features/progress/data";
+import { getDashboardStats } from "@/features/dashboard/db";
+import { requireAuth } from "@/auth/session";
 
-export default function DashboardPage() {
-  const SHOW_EMPTY_STATE = false; 
-  const data = SHOW_EMPTY_STATE ? emptyProgressData : starterProgressData;
+export default async function DashboardPage() {
+  /*Check if the user is authenticated; if not, redirect to login*/
+  const user = await requireAuth();
+
+  /*Get dashboard stats for the current user*/
+  const data = await getDashboardStats(user.id);
 
   /*Check if the user has ANY active metrics*/
   const hasProgress = 
     data.learnedWords > 0 || 
     data.recentSessions.length > 0 ||
     data.activeSets > 0 ||
-    data.hardWords > 0 ||
-    data.dailyGoal.current > 0;
+    data.needsReview > 0 ||
+    data.wordsPracticedToday > 0;
+
+  /*Format date for display in the recent sessions table*/
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(date));
+  };
 
   return (
     <>
@@ -31,7 +45,6 @@ export default function DashboardPage() {
             description="Complete training sessions to see progress, accuracy, and difficult words here."
           />
           <div className="mt-6 flex justify-center">
-            {/*Using the shared Button component as a Link for consistency*/}
             <Button asChild href="/word-sets">
               Browse Word Sets &rarr;
             </Button>
@@ -53,7 +66,7 @@ export default function DashboardPage() {
             />
             <StatCard 
               label="Daily Goal" 
-              value={`${data.dailyGoal.current} / ${data.dailyGoal.target}`} 
+              value={`${data.wordsPracticedToday} / 20`} 
               helper="Words practiced today" 
             />
             <StatCard
@@ -63,7 +76,7 @@ export default function DashboardPage() {
             />
             <StatCard 
               label="Needs Review" 
-              value={data.hardWords.toString()} 
+              value={data.needsReview.toString()} 
               helper="Words you struggle with" 
             />
           </div>
@@ -83,10 +96,10 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
-                      {data.recentSessions.map((session: RecentSession) => (
+                      {data.recentSessions.map((session) => (
                         <tr key={session.id} className="hover:bg-slate-50">
-                          <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{session.date}</td>
-                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">{session.setName}</td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm text-slate-600">{formatDate(session.date)}</td>
+                          <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-900">{session.wordSetTitle}</td>
                           <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium text-blue-600">{session.score}</td>
                         </tr>
                       ))}

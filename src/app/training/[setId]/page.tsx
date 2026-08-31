@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { starterWordSets } from "@/features/word-sets/data";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/auth/session";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TrainingClient } from "./TrainingClient";
 import { shuffleArray } from "@/features/word-sets/training";
+import { getWordSetById } from "@/features/word-sets/repository";
 
 type PageProps = {
   params: Promise<{
@@ -25,11 +27,15 @@ function TrainingUnavailable({ title, description, backHref, backLabel }: { titl
 }
 
 export default async function TrainingSessionPage({ params }: PageProps) {
+  /*Check if the user is authenticated; if not, redirect to login*/
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   // Asynchronously retrieve the parameters
   const resolvedParams = await params;
-  
-  // Find the word set based on the provided setId
-  const wordSet = starterWordSets.find((set) => set.id === resolvedParams.setId);
+  const wordSet = await getWordSetById(resolvedParams.setId);
 
   // Handle the case where the word set is not found
   if (!wordSet) {
