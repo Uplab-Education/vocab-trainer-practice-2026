@@ -1,15 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { type WordSet } from "@/features/word-sets/data";
-import { generateOptions } from "@/features/word-sets/training";
+import { generateOptions, type DBTrainingSet } from "@/features/word-sets/training";
 import { Button } from "@/components/ui/button";
 import { TrainingProgress } from "@/components/training/TrainingProgress";
 import { TrainingSummary, type AnswerRecord } from "@/components/training/TrainingSummary";
 import { AnswerButton, getAnswerState } from "@/components/training/AnswerButton";
 import { checkAnswer } from "@/features/training/logic";
 
-export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, initialOptions: string[] }) {
+export function TrainingClient({ wordSet, initialOptions }: { wordSet: DBTrainingSet, initialOptions: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
@@ -86,9 +85,9 @@ export function TrainingClient({ wordSet, initialOptions }: { wordSet: WordSet, 
 
       {/* Answer options */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {options.map((option) => (
+        {options.map((option, index) => (
           <AnswerButton
-            key={option}
+            key={`${option}-${index}`}
             option={option}
             state={getAnswerState(option, selectedAnswer, currentWord.ukrainianTranslation)}
             onSelect={handleAnswer}
